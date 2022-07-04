@@ -48,8 +48,22 @@ class StaticURLTests(TestCase):
                 self.assertTemplateUsed(response, template)
 
     def test_url_exists_at_desired_location_for_unauthorizes_client(self):
-        """Проверка страниц на доступность авторизованным и
-        невавторизованным пользователям."""
+        """Проверка страниц create и posts/1/edit на доступность
+        авторизованному пользователю, и posts/1/edit автору поста."""
+        pages = {
+            self.authorized_client.get('/create/').status_code:
+            HTTPStatus.OK.value,
+            self.authorized_client.get('/posts/1/edit/').status_code:
+            HTTPStatus.FOUND.value,
+            self.author_client.get('/posts/1/edit/').status_code:
+            HTTPStatus.OK.value,
+        }
+        for url, stat_code in pages.items():
+            with self.subTest(url=url):
+                self.assertEqual(url, stat_code)
+
+    def test_url_exists_at_desired_location_for_unauthorizes_client(self):
+        """Проверка страниц на доступность любому пользователю."""
 
         pages = {
             self.guest_client.get('/').status_code:
@@ -60,28 +74,9 @@ class StaticURLTests(TestCase):
             HTTPStatus.OK.value,
             self.guest_client.get('/posts/1/').status_code:
             HTTPStatus.OK.value,
-            self.guest_client.get('/create/').status_code:
-            HTTPStatus.FOUND.value,
-            self.guest_client.get('/posts/1/edit/').status_code:
-            HTTPStatus.FOUND.value,
             self.guest_client.get('/unexosting_page/').status_code:
             HTTPStatus.NOT_FOUND.value,
-            self.authorized_client.get('/').status_code:
-            HTTPStatus.OK.value,
-            self.authorized_client.get('/group/test-slug/').status_code:
-            HTTPStatus.OK.value,
-            self.authorized_client.get('/profile/auth/').status_code:
-            HTTPStatus.OK.value,
-            self.authorized_client.get('/posts/1/').status_code:
-            HTTPStatus.OK.value,
-            self.authorized_client.get('/create/').status_code:
-            HTTPStatus.OK.value,
-            self.authorized_client.get('/posts/1/edit/').status_code:
-            HTTPStatus.FOUND.value,
-            self.authorized_client.get('/unexosting_page/').status_code:
-            HTTPStatus.NOT_FOUND.value,
-            self.author_client.get('/posts/1/edit/').status_code:
-            HTTPStatus.OK.value,
+
         }
         for url, stat_code in pages.items():
             with self.subTest(url=url):

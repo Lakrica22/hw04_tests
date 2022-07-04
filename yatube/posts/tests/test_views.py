@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
+from http import HTTPStatus
 
 from posts.models import Post, Group
 
@@ -36,9 +37,6 @@ class TaskPagesTests(TestCase):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
-        self.author_client = Client()
-        self.author_client.force_login(self.user_author)
-
     def test_pages_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
         templates_pages_names = {
@@ -61,6 +59,7 @@ class TaskPagesTests(TestCase):
             with self.subTest(reverse_name=reverse_name):
                 response = self.authorized_client.get(reverse_name)
                 self.assertTemplateUsed(response, template)
+                self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_index_page_show_correct_context(self):
         """Шаблон index сформирован с правильным контекстом."""
@@ -68,6 +67,9 @@ class TaskPagesTests(TestCase):
         first_object = response.context['page_obj'][0]
         task_text_0 = first_object.text
         self.assertEqual(task_text_0, 'Тестовая пост')
+        self.assertEqual(first_object.pub_date, self.post.pub_date)
+        self.assertEqual(first_object.author.username, 'auth')
+        self.assertEqual(first_object.group.title, 'Тестовая группа')
 
     def test_group_list_page_show_correct_context(self):
         """Шаблон group_list сформирован с правильным контекстом."""
@@ -88,16 +90,18 @@ class TaskPagesTests(TestCase):
 
     def test_profile_page_show_correct_context(self):
         """Шаблон profile сформирован с правильным контекстом."""
-        response = self.authorized_client.get(
+        response = self.guest_client.get(
             reverse('posts:profile', kwargs={'username': 'auth'})
         )
+        self.assertIn('author', response.context)
         self.assertEqual(response.context.get('author').username, 'auth')
 
     def test_post_detail_page_show_correct_context(self):
         """Шаблон post_detail сформирован с правильным контекстом."""
-        response = self.authorized_client.get(
+        response = self.guest_client.get(
             reverse('posts:post_detail', kwargs={'post_id': '1'})
         )
+        self.assertIn('post', response.context)
         self.assertEqual(response.context.get('post').text, 'Тестовая пост')
 
     def test_create_post_show_correct_context(self):
@@ -139,18 +143,16 @@ class PaginatorViewsTest(TestCase):
             slug='test-slug',
             description='Тестовое описание',
         )
-        for i in range(13):
-            Post.objects.create(text=f'Текст тестового поста №{i}',
-                                author=cls.user_author,
-                                group=cls.group,)
+        Post.objects.bulk_create([Post(
+            text=f"Текст тестового поста № {i}",
+            author=cls.user_author,
+            group=cls.group
+        ) for i in range(13)])
 
     def setUp(self):
         self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
-
-        self.author_client = Client()
-        self.author_client.force_login(self.user_author)
 
     def test_pages_first_page_contains_ten_records(self):
         """Проверка работы паджинатора."""

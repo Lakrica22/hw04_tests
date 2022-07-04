@@ -4,6 +4,7 @@ from django.test import TestCase
 from ..models import Group, Post
 
 User = get_user_model()
+letters_in_title: int = 15
 
 
 class PostModelTest(TestCase):
@@ -18,14 +19,14 @@ class PostModelTest(TestCase):
         )
         cls.post = Post.objects.create(
             author=cls.user,
-            text='Тестовая пост',
+            text='Тестовый большой пост',
         )
 
     def test_models_have_correct_object_names(self):
         """Проверяем, что у моделей корректно работает __str__."""
         model_string = {
             PostModelTest.group: PostModelTest.group.title,
-            PostModelTest.post: PostModelTest.post.text[:15],
+            PostModelTest.post: PostModelTest.post.text[:letters_in_title],
         }
         for model, expected_value in model_string.items():
             with self.subTest(model=model):
