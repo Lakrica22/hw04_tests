@@ -32,3 +32,26 @@ class PostModelTest(TestCase):
             with self.subTest(model=model):
                 self.assertEqual(model.__str__(), expected_value,
                                  f'Ошибка метода в {type(model).__name__}')
+
+    def test_verbose_name(self):
+        """verbose_name в полях совпадает с ожидаемым."""
+        post = PostModelTest.post
+        field_verboses = {
+            'author': 'Автор',
+            'group': 'Группа',
+        }
+        for field, expected_value in field_verboses.items():
+            with self.subTest(field=field):
+                self.assertEqual(
+                    post._meta.get_field(field).verbose_name, expected_value)
+
+    def test_help_text(self):
+        """help_text в полях совпадает с ожидаемым."""
+        post = PostModelTest.post
+        field_help_texts = {
+            'group': 'Группа, к которой будет относиться пост',
+        }
+        for field, expected_value in field_help_texts.items():
+            with self.subTest(field=field):
+                self.assertEqual(
+                    post._meta.get_field(field).help_text, expected_value)
