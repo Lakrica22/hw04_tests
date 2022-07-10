@@ -71,7 +71,7 @@ class TaskPagesTests(TestCase):
                 self.assertTemplateUsed(response, template)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
 
-    def page_signup_show_correct_context(self):
+    def test_page_signup_show_correct_context(self):
         """Проверьте, что на страницу signup
         в контексте передаётся форма для создания нового пользователя."""
         response = self.guest_client.get(
@@ -79,8 +79,8 @@ class TaskPagesTests(TestCase):
         )
         form_fields = {
             'first_name': forms.fields.CharField,
-            'last_name': forms.fields.ChoiceField,
-            'username': forms.fields.ChoiceField,
+            'last_name': forms.fields.CharField,
+            'username': forms.fields.CharField,
             'email': forms.fields.EmailField,
         }
         for value, expected in form_fields.items():
